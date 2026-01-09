@@ -1,62 +1,118 @@
-export const exampleAccountInfo = {
-  accountId: "NT-123456",
-  name: "Alex Johnson",
-  phone: "+1-206-135-1246",
-  email: "alex.johnson@email.com",
-  plan: "Unlimited Plus",
-  balanceDue: "$42.17",
-  lastBillDate: "2024-05-15",
-  lastPaymentDate: "2024-05-20",
-  lastPaymentAmount: "$42.17",
-  status: "Active",
-  address: {
-    street: "1234 Pine St",
-    city: "Seattle",
-    state: "WA",
-    zip: "98101"
-  },
-  lastBillDetails: {
-    basePlan: "$30.00",
-    internationalCalls: "$8.00",
-    dataOverage: "$4.00",
-    taxesAndFees: "$0.17",
-    notes: "Higher than usual due to international calls and data overage."
-  }
-};
-
-export const examplePolicyDocs = [
-  {
-    id: "ID-010",
-    name: "Family Plan Policy",
-    topic: "family plan options",
-    content:
-      "The family plan allows up to 5 lines per account. All lines share a single data pool. Each additional line after the first receives a 10% discount. All lines must be on the same account.",
-  },
-  {
-    id: "ID-020",
-    name: "Promotions and Discounts Policy",
-    topic: "promotions and discounts",
-    content:
-      "The Summer Unlimited Data Sale provides a 20% discount on the Unlimited Plus plan for the first 6 months for new activations completed by July 31, 2024. The Refer-a-Friend Bonus provides a $50 bill credit to both the referring customer and the new customer after 60 days of active service, for activations by August 31, 2024. A maximum of 5 referral credits may be earned per account. Discounts cannot be combined with other offers.",
-  },
-  {
-    id: "ID-030",
-    name: "International Plans Policy",
-    topic: "international plans",
-    content:
-      "International plans are available and include discounted calling, texting, and data usage in over 100 countries.",
-  },
-  {
-    id: "ID-040",
-    name: "Handset Offers Policy",
-    topic: "new handsets",
-    content:
-      "Handsets from brands such as iPhone and Google are available. The iPhone 16 is $200 and the Google Pixel 8 is available for $0, both with an additional 18-month commitment. These offers are valid while supplies last and may require eligible plans or trade-ins. For more details, visit one of our stores.",
-  },
+export const SoftwareDocs = [
+    {
+        id: "6560",
+        name: "6560 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6560. Development codename: Nandi. Supported model: 6560. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6570M",
+        name: "6570M Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6570M. Development codename: Whitney. Supported model: 6570M. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6865",
+        name: "6865 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6865. Development codename: Everest. Supported model: 6865. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6465",
+        name: "6465 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6465. Development codename: Vindhya. Supported model: 6465. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "9900",
+        name: "9900 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 9900. Development codename: Medora. Supported model: 9900. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6900 Tor",
+        name: "6900 Tor Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6900 Tor. Development codename: Tor. Supported models include 6900 Tor, X20, X40, X72, T20, T40, and Q32. Supported variants include X20/X40/X72/T20/T40/Q32. The latest available software version is 8.9.94.R04.",
+    },
+    {
+        id: "6900 Yukon",
+        name: "6900 Yukon Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6900 Yukon. Development codename: Yukon. Supported models include 6900 Yukon, T48C6, V72, V48C8, and X48C6. Supported variants include T48C6/V72/V48C8/X48C6. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6920",
+        name: "6920 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6920. Development codename: Yukon Plus. Supported model: 6920. Supported variants include OS6920.... The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6860",
+        name: "6860 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6860. Development codename: Shasta. Supported model: 6860. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6860N",
+        name: "6860N Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6860N. Development codename: Shasta N. Supported model: 6860N. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6360",
+        name: "6360 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6360. Development codename: Aravalli. Supported model: 6360. The latest available software version is 8.10.86.R04.",
+    },
+    {
+        id: "6870",
+        name: "6870 Software Information",
+        topic: "software versions",
+        content:
+            "Product name: 6870. Development codename: Kailash. Supported model: 6870. The latest available software version is 8.10.86.R04.",
+    },
 ];
 
+export const exampleAccountInfo = {
+    /*  accountId: "NT-123456",
+      name: "Alex Johnson",
+      phone: "+1-206-135-1246",
+      email: "alex.johnson@email.com",
+      plan: "Unlimited Plus",
+      balanceDue: "$42.17",
+      lastBillDate: "2024-05-15",
+      lastPaymentDate: "2024-05-20",
+      lastPaymentAmount: "$42.17",
+      status: "Active",
+      address: {
+        street: "1234 Pine St",
+        city: "Seattle",
+        state: "WA",
+        zip: "98101"
+      },
+      lastBillDetails: {
+        basePlan: "$30.00",
+        internationalCalls: "$8.00",
+        dataOverage: "$4.00",
+        taxesAndFees: "$0.17",
+        notes: "Higher than usual due to international calls and data overage."
+      }*/
+};
+
 export const exampleStoreLocations = [
-  // NorCal
+/*  // NorCal
   {
     name: "NewTelco San Francisco Downtown Store",
     address: "1 Market St, San Francisco, CA",
@@ -128,5 +184,5 @@ export const exampleStoreLocations = [
     zip_code: "33139",
     phone: "(305) 555-1010",
     hours: "Mon-Sat 10am-8pm, Sun 11am-6pm"
-  }
+  }*/
 ];
