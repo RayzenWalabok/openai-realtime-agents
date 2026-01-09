@@ -148,7 +148,7 @@ export async function GET() {
 		});
 
 	} catch (error) {
-		console.error('💥 Error in /api/ovng:', error);
+		console.error('💥 Error in /api/ovng/devices:', error);
 
 		return NextResponse.json(
 			{

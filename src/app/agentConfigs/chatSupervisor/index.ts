@@ -100,6 +100,6 @@ lookupSoftwareDocument:
 export const chatSupervisorScenario = [chatAgent];
 
 // Name of the company represented by this agent set. Used by guardrails
-export const chatSupervisorCompanyName = 'Omnivista Aiva';
+export const chatSupervisorCompanyName = 'Alcatel Lucent Enterprise';
 
 export default chatSupervisorScenario;

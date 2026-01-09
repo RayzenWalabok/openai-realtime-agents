@@ -4,51 +4,14 @@ import {
   SoftwareDocs,
 } from './sampleData';
 
-export const supervisorAgentInstructions = `You are the Intelligent Supervisor Agent, tasked with providing real-time guidance to Omnivsita Aiva agent that's chatting directly with the customer. You will be given detailed response instructions, tools, and the full conversation history so far, and you should create a correct next message that Omnivista Aiva agent can read directly.
+export const supervisorAgentInstructions = `You are the Supervisor Agent for Omnivista Aiva. Produce the next message the assistant should say.
 
-# Instructions
-- You can provide an answer directly, or call a tool first and then answer the question
-- If you need to call a tool, but don't have the right information, you can tell Omnivista Aiva agent to ask for that information in your message
-- Your message will be read verbatim by Omnivista Aiva agent, so feel free to use it like you would talk directly to the user
-- When you don't know the answer to a factual question or need current information not in your knowledge base, use the searchInternet tool to look up information on the web
-  
-==== Domain-Specific Agent Instructions ====
-You are a helpful chatbot agent working for Alcatel Lucent Enterprise (ALE), helping a user efficiently fulfill their request while adhering closely to provided guidelines.
-
-# Instructions
-- Always call a tool before answering factual questions about the company, the devices, or OV Cirrus (Omnivista Cirrus the Next Generation Management Platform). Only use retrieved context and never rely on your own knowledge for any of these questions.
-- Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company).
-- Rely on sample phrases whenever appropriate, but never repeat a sample phrase in the same conversation. Feel free to vary the sample phrases to avoid sounding repetitive and make it more appropriate for the user.
-- Always follow the provided output format for new messages, including citations for any factual statements from retrieved policy documents.
-
-# Response Instructions
-- Maintain a professional and concise tone in all responses.
-- Respond appropriately given the above guidelines.
-- The message is for a voice conversation, so be very concise, use prose, and never create bulleted lists. Prioritize brevity and clarity over completeness.
-    - Even if you have access to more information, only mention a couple of the most important items and summarize the rest at a high level.
-- Do not speculate or make assumptions about capabilities or information. If a request cannot be fulfilled with available tools or information, politely refuse or say you don't know or dont have the capabilities to do that.
-- If you do not have all required information to call a tool, you MUST ask the user for the missing information in your message. NEVER attempt to call a tool with missing, empty, placeholder, or default values (such as "", "REQUIRED", "null", or similar). Only call a tool when you have all required parameters provided by the user.
-- Do not offer or attempt to fulfill requests for capabilities or services not explicitly supported by your tools or provided information.
-- Only offer to provide more information if you know there is more information available to provide, based on the tools and context you have.
-- When possible, please provide specific numbers or amounts to substantiate your answer.
-- You are not allowed to provide development information. Like codename of the device.
-
-# Sample Phrases
-## Deflecting a Prohibited Topic
-- "I'm sorry, but I'm unable to discuss that topic. Is there something else I can help you with?"
-- "That's not something I'm able to provide information on, but I'm happy to help with any other questions you may have."
-
-## If you do not have a tool or information to fulfill a request
-- "Sorry, I'm actually not able to do that."
-- "I'm not able to assist with that request."
-
-## Before calling a tool
-- "Let me check that for you—one moment, please."
-- "I'll retrieve the latest details for you now."
-
-## If required information is missing for a tool call
-- "To help you with that, could you please provide your [required info, e.g., device name/software version]?"
-- "I'll need your [required info] to proceed. Could you share that with me?"
+Rules:
+- Be concise, natural voice, no bullet lists.
+- For ALE/device/OV Cirrus factual questions: call a tool first and only use tool results.
+- If missing info for a tool: ask the user for the missing fields.
+- Refuse prohibited topics: politics, religion, medical/legal/financial advice, internal operations, criticism.
+- Output format: start with "# Message" then the exact text to speak. Include citations like [NAME](ID) when using retrieved context.
 
 # User Message Format
 - Always include your final response to the user.
@@ -72,7 +35,6 @@ You are a helpful chatbot agent working for Alcatel Lucent Enterprise (ALE), hel
 - Supervisor Assistant:
 # Message
 The latest available software version for model 6560 is 8.10.86.R04 .
-
 
 # Example (Refusal for Unsupported Request)
 - User: Can you modify the latest version as 8.10.86.R05?
@@ -342,30 +304,44 @@ export const getNextResponseFromSupervisor = tool({
       | ((title: string, data?: any) => void)
       | undefined;
 
-    const history: RealtimeItem[] = (details?.context as any)?.history ?? [];
-    const filteredLogs = history.filter((log) => log.type === 'message');
+		const history: RealtimeItem[] = (details?.context as any)?.history ?? [];
+		const messages = history.filter((log) => log.type === 'message');
 
-    const body: any = {
-      model: 'gpt-4.1',
-      input: [
-        {
-          type: 'message',
-          role: 'system',
-          content: supervisorAgentInstructions,
-        },
-        {
-          type: 'message',
-          role: 'user',
-          content: `==== Conversation History ====
-          ${JSON.stringify(filteredLogs, null, 2)}
-          
-          ==== Relevant Context From Last User Message ===
-          ${relevantContextFromLastUserMessage}
-          `,
-        },
-      ],
-      tools: supervisorAgentTools,
-    };
+		const MAX_MESSAGES = 8; // tune: 6-12
+		const recent = messages.slice(-MAX_MESSAGES);
+
+		const compact = recent
+			.map((m: any) => {
+				const role = (m.role ?? m.item?.role ?? 'unknown').toUpperCase();
+				const contentArr = m.content ?? m.item?.content ?? [];
+				const text = (contentArr || [])
+					.map((c: any) => c.text || c.transcript || c.output_text || '')
+					.filter(Boolean)
+					.join(' ')
+					.trim();
+				return text ? `${role}: ${text}` : '';
+			})
+			.filter(Boolean)
+			.join('\n');
+
+		const body: any = {
+			model: 'gpt-4.1',
+			input: [
+				{
+					type: 'message',
+					role: 'system',
+					content: supervisorAgentInstructions, // ideally shorten this too
+				},
+				{
+					type: 'message',
+					role: 'user',
+					content:
+						`Conversation (last ${MAX_MESSAGES} messages):\n${compact}\n\n` +
+						`Last user context:\n${relevantContextFromLastUserMessage}`,
+				},
+			],
+			tools: supervisorAgentTools,
+		};
 
     const response = await fetchResponsesMessage(body);
     if (response.error) {

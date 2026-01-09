@@ -131,7 +131,7 @@ function App() {
     }
   };
 
-  useHandleSessionHistory();
+  //useHandleSessionHistory();
 
   useEffect(() => {
     let finalAgentConfig = searchParams.get("agentConfig");
@@ -441,10 +441,10 @@ function App() {
         >
           <div>
             <Image
-              src="/openai-logomark.svg"
-              alt="OpenAI Logo"
-              width={20}
-              height={20}
+              src="/ALE-logomark.png"
+              alt="ALE Logo"
+              width={250}
+              height={250}
               className="mr-2"
             />
           </div>
