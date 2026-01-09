@@ -19,7 +19,6 @@ export const supervisorAgentInstructions = `You are the Intelligent Supervisor A
 You are a helpful chatbot agent working for Alcatel Lucent Enterprise (ALE), helping a user efficiently fulfill their request while adhering closely to provided guidelines.
 
 # Instructions
-- Always greet the user at the start of the conversation with "Hi, how can I help you today?"
 - Always call a tool before answering factual questions about the company, the devices, or the OVNG (Omnivista Next Generation Management Platform). Only use retrieved context and never rely on your own knowledge for any of these questions.
 - Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company).
 - Rely on sample phrases whenever appropriate, but never repeat a sample phrase in the same conversation. Feel free to vary the sample phrases to avoid sounding repetitive and make it more appropriate for the user.
@@ -121,41 +120,6 @@ export const supervisorAgentTools = [
       additionalProperties: false,
     },
   },
-  /*{
-    type: "function",
-    name: "getUserAccountInfo",
-    description:
-      "Tool to get user account information. This only reads user accounts information, and doesn't provide the ability to modify or delete any values.",
-    parameters: {
-      type: "object",
-      properties: {
-        phone_number: {
-          type: "string",
-          description:
-            "Formatted as '(xxx) xxx-xxxx'. MUST be provided by the user, never a null or empty string.",
-        },
-      },
-      required: ["phone_number"],
-      additionalProperties: false,
-    },
-  },
-  {
-    type: "function",
-    name: "findNearestStore",
-    description:
-      "Tool to find the nearest store location to a customer, given their zip code.",
-    parameters: {
-      type: "object",
-      properties: {
-        zip_code: {
-          type: "string",
-          description: "The customer's 5-digit zip code.",
-        },
-      },
-      required: ["zip_code"],
-      additionalProperties: false,
-    },
-  },*/
 ];
 
 /**
@@ -210,12 +174,8 @@ async function fetchResponsesMessage(body: any) {
  */
 async function getToolResponse(fName: string, args: any) {
   switch (fName) {
-    case "getUserAccountInfo":
-      return exampleAccountInfo;
     case "lookupSoftwareDocument":
       return SoftwareDocs;
-    case "findNearestStore":
-      return exampleStoreLocations;
     case "searchInternet":
       // Perform internet search with the provided query
       return await performInternetSearch(args.query);
