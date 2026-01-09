@@ -13,6 +13,7 @@ export const supervisorAgentInstructions = `You are the Intelligent Supervisor A
 - You can provide an answer directly, or call a tool first and then answer the question
 - If you need to call a tool, but don't have the right information, you can tell Omnivista Aiva agent to ask for that information in your message
 - Your message will be read verbatim by Omnivista Aiva agent, so feel free to use it like you would talk directly to the user
+- When you don't know the answer to a factual question or need current information not in your knowledge base, use the searchInternet tool to look up information on the web
   
 ==== Domain-Specific Agent Instructions ====
 You are a helpful chatbot agent working for Alcatel Lucent Enterprise (ALE), helping a user efficiently fulfill their request while adhering closely to provided guidelines.
@@ -102,6 +103,24 @@ export const supervisorAgentTools = [
       additionalProperties: false,
     },
   },
+  {
+    type: "function",
+    name: "searchInternet",
+    description:
+      "Search the internet for current information, facts, or answers when the information is not available in the knowledge base or tools. Use this when you need real-time or external information.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description:
+            "The search query to look up on the internet. Be specific and clear.",
+        },
+      },
+      required: ["query"],
+      additionalProperties: false,
+    },
+  },
   /*{
     type: "function",
     name: "getUserAccountInfo",
@@ -139,6 +158,99 @@ export const supervisorAgentTools = [
   },*/
 ];
 
+/**
+ * Performs an internet search using available search APIs
+ * Supports multiple search providers with fallback options
+ */
+async function performInternetSearch(query: string): Promise<any> {
+  try {
+    // Try Tavily API first if API key is available
+    const tavilyApiKey = process.env.TAVILY_API_KEY;
+    if (tavilyApiKey) {
+      try {
+        const response = await fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            api_key: tavilyApiKey,
+            query: query,
+            search_depth: 'basic',
+            include_answer: true,
+            max_results: 5,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            success: true,
+            query: query,
+            answer: data.answer || '',
+            results: data.results?.map((r: any) => ({
+              title: r.title,
+              url: r.url,
+              content: r.content,
+            })) || [],
+          };
+        }
+      } catch (err) {
+        console.warn('Tavily search failed, trying fallback:', err);
+      }
+    }
+
+    // Try SerpAPI as fallback
+    const serpApiKey = process.env.SERPAPI_API_KEY;
+    if (serpApiKey) {
+      try {
+        const params = new URLSearchParams({
+          api_key: serpApiKey,
+          q: query,
+          engine: 'google',
+          num: '5',
+        });
+
+        const response = await fetch(`https://serpapi.com/search?${params}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          const organicResults = data.organic_results || [];
+
+          return {
+            success: true,
+            query: query,
+            answer: data.answer_box?.answer || '',
+            results: organicResults.map((r: any) => ({
+              title: r.title,
+              url: r.link,
+              content: r.snippet,
+            })),
+          };
+        }
+      } catch (err) {
+        console.warn('SerpAPI search failed:', err);
+      }
+    }
+
+    // If no API keys are available, return a helpful message
+    return {
+      success: false,
+      query: query,
+      error: 'Internet search is not configured. Please set up TAVILY_API_KEY or SERPAPI_API_KEY in environment variables.',
+      results: [],
+    };
+  } catch (error) {
+    console.error('Internet search error:', error);
+    return {
+      success: false,
+      query: query,
+      error: 'Failed to perform internet search',
+      results: [],
+    };
+  }
+}
+
 async function fetchResponsesMessage(body: any) {
   const response = await fetch('/api/responses', {
     method: 'POST',
@@ -158,7 +270,11 @@ async function fetchResponsesMessage(body: any) {
   return completion;
 }
 
-function getToolResponse(fName: string) {
+/**
+ * Routes tool calls to their respective implementations
+ * Returns the result of the tool execution
+ */
+async function getToolResponse(fName: string, args: any) {
   switch (fName) {
     case "getUserAccountInfo":
       return exampleAccountInfo;
@@ -166,6 +282,9 @@ function getToolResponse(fName: string) {
       return SoftwareDocs;
     case "findNearestStore":
       return exampleStoreLocations;
+    case "searchInternet":
+      // Perform internet search with the provided query
+      return await performInternetSearch(args.query);
     default:
       return { result: true };
   }
@@ -214,9 +333,11 @@ async function handleToolCalls(
     for (const toolCall of functionCalls) {
       const fName = toolCall.name;
       const args = JSON.parse(toolCall.arguments || '{}');
-      const toolRes = getToolResponse(fName);
 
-      // Since we're using a local function, we don't need to add our own breadcrumbs
+      // Execute the tool (now async to support internet search)
+      const toolRes = await getToolResponse(fName, args);
+
+      // Log breadcrumbs for debugging and tracking
       if (addBreadcrumb) {
         addBreadcrumb(`[supervisorAgent] function call: ${fName}`, args);
       }
