@@ -1,10 +1,7 @@
 import { RealtimeItem, tool } from '@openai/agents/realtime';
 
-
 import {
-  exampleAccountInfo,
   SoftwareDocs,
-  exampleStoreLocations,
 } from './sampleData';
 
 export const supervisorAgentInstructions = `You are the Intelligent Supervisor Agent, tasked with providing real-time guidance to Omnivsita Aiva agent that's chatting directly with the customer. You will be given detailed response instructions, tools, and the full conversation history so far, and you should create a correct next message that Omnivista Aiva agent can read directly.
@@ -19,7 +16,7 @@ export const supervisorAgentInstructions = `You are the Intelligent Supervisor A
 You are a helpful chatbot agent working for Alcatel Lucent Enterprise (ALE), helping a user efficiently fulfill their request while adhering closely to provided guidelines.
 
 # Instructions
-- Always call a tool before answering factual questions about the company, the devices, or the OVNG (Omnivista Next Generation Management Platform). Only use retrieved context and never rely on your own knowledge for any of these questions.
+- Always call a tool before answering factual questions about the company, the devices, or OV Cirrus (Omnivista Cirrus the Next Generation Management Platform). Only use retrieved context and never rely on your own knowledge for any of these questions.
 - Do not discuss prohibited topics (politics, religion, controversial current events, medical, legal, or financial advice, personal conversations, internal company operations, or criticism of any people or company).
 - Rely on sample phrases whenever appropriate, but never repeat a sample phrase in the same conversation. Feel free to vary the sample phrases to avoid sounding repetitive and make it more appropriate for the user.
 - Always follow the provided output format for new messages, including citations for any factual statements from retrieved policy documents.
@@ -120,7 +117,33 @@ export const supervisorAgentTools = [
       additionalProperties: false,
     },
   },
+	{
+		type: "function",
+		name: "getDevicesInfo",
+		description:
+			"Retrieve all devices base information from OmniVista Cirrus for the configured organization and site. Returns device information including devicefamily (Access Point (AP), model, name, ip, mac, ovngstatus (ovn managed, or not managed), running softwareversion, configchanges (certified or unsaved).",
+		parameters: {
+			type: "object",
+			properties: {},
+			additionalProperties: true,
+		},
+	},
 ];
+
+
+/**
+ * Performs a rest API to retreive OV Cirrus Device list
+ */
+async function fetchOVCirrusDevicesInfo() {
+	const response = await fetch('/api/ovng/devices');
+	const data = await response.json();
+
+	if (!data.success) {
+		throw new Error(data.message);
+	}
+
+	return data.devices; // Retourne juste le tableau
+}
 
 /**
  * Performs an internet search by calling the server-side API endpoint
@@ -173,15 +196,49 @@ async function fetchResponsesMessage(body: any) {
  * Returns the result of the tool execution
  */
 async function getToolResponse(fName: string, args: any) {
-  switch (fName) {
-    case "lookupSoftwareDocument":
-      return SoftwareDocs;
-    case "searchInternet":
-      // Perform internet search with the provided query
-      return await performInternetSearch(args.query);
-    default:
-      return { result: true };
-  }
+	switch (fName) {
+		case "lookupSoftwareDocument":
+			return SoftwareDocs;
+
+		case "searchInternet":
+			return await performInternetSearch(args.query);
+
+		case "getDevicesInfo":
+			try {
+				const devices = await fetchOVCirrusDevicesInfo();
+
+				if (devices.length === 0) {
+					return {
+						success: true,
+						message: "No devices found in the OmniVista system for this organization and site.",
+						devices: [],
+						count: 0,
+						timestamp: new Date().toISOString(),
+					};
+				}
+
+				return {
+					success: true,
+					message: `Successfully retrieved device(s) info from OmniVista`,
+					devices: devices,
+					count: devices.length,
+					timestamp: new Date().toISOString(),
+				};
+
+			} catch (error) {
+				return {
+					success: false,
+					message: 'Failed to retrieve devices from OmniVista',
+					error: error instanceof Error ? error.message : 'Unknown error occurred',
+					devices: [],
+					count: 0,
+					timestamp: new Date().toISOString(),
+				};
+			}
+
+		default:
+			return { result: true };
+	}
 }
 
 /**
@@ -323,4 +380,6 @@ export const getNextResponseFromSupervisor = tool({
     return { nextResponse: finalText as string };
   },
 });
+
+
   
